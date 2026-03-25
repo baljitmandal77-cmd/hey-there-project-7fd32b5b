@@ -577,35 +577,40 @@ function ServerConfigPage() {
   );
 }
 
+function ToggleSetting({ title, desc, defaultEnabled }: { title: string; desc: string; defaultEnabled: boolean }) {
+  const [enabled, setEnabled] = useState(defaultEnabled);
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 flex items-start justify-between gap-4">
+      <div>
+        <div className="font-semibold text-foreground">{title}</div>
+        <div className="text-sm text-muted-foreground mt-0.5">{desc}</div>
+      </div>
+      <button
+        onClick={() => setEnabled(e => !e)}
+        className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? "bg-primary" : "bg-secondary"}`}
+      >
+        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${enabled ? "left-6" : "left-1"}`} />
+      </button>
+    </div>
+  );
+}
+
 function SettingsPage() {
+  const settings = [
+    { title: "Debug Mode", desc: "Enable verbose logging for all services", enabled: false },
+    { title: "Maintenance Mode", desc: "Redirect all users to maintenance page", enabled: false },
+    { title: "Auto Backup", desc: "Automatic daily database backups at midnight", enabled: true },
+    { title: "Email Notifications", desc: "Send alerts for critical system events", enabled: true },
+    { title: "API Rate Limiting", desc: "Limit API calls to 1000 req/hr per user", enabled: true },
+    { title: "HTTPS Redirect", desc: "Automatically redirect HTTP to HTTPS", enabled: true },
+  ];
   return (
     <div className="space-y-6 animate-fade-in">
       <h2 className="text-2xl font-bold text-foreground">Dev Settings</h2>
       <div className="grid md:grid-cols-2 gap-6">
-        {[
-          { title: "Debug Mode", desc: "Enable verbose logging for all services", enabled: false },
-          { title: "Maintenance Mode", desc: "Redirect all users to maintenance page", enabled: false },
-          { title: "Auto Backup", desc: "Automatic daily database backups at midnight", enabled: true },
-          { title: "Email Notifications", desc: "Send alerts for critical system events", enabled: true },
-          { title: "API Rate Limiting", desc: "Limit API calls to 1000 req/hr per user", enabled: true },
-          { title: "HTTPS Redirect", desc: "Automatically redirect HTTP to HTTPS", enabled: true },
-        ].map(s => {
-          const [enabled, setEnabled] = useState(s.enabled);
-          return (
-            <div key={s.title} className="bg-card border border-border rounded-xl p-5 flex items-start justify-between gap-4">
-              <div>
-                <div className="font-semibold text-foreground">{s.title}</div>
-                <div className="text-sm text-muted-foreground mt-0.5">{s.desc}</div>
-              </div>
-              <button
-                onClick={() => setEnabled(e => !e)}
-                className={`w-11 h-6 rounded-full transition-colors shrink-0 relative ${enabled ? "bg-primary" : "bg-secondary"}`}
-              >
-                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${enabled ? "left-6" : "left-1"}`} />
-              </button>
-            </div>
-          );
-        })}
+        {settings.map(s => (
+          <ToggleSetting key={s.title} title={s.title} desc={s.desc} defaultEnabled={s.enabled} />
+        ))}
       </div>
     </div>
   );
