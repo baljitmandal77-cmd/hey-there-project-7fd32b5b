@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Phone, Mail, MapPin, Facebook, Twitter, Youtube } from "lucide-react";
+import { GraduationCap, Phone, Mail, MapPin, Facebook, Twitter, Youtube, Instagram } from "lucide-react";
+import { getPublicContent } from "@/lib/erpStore";
 
 export default function Footer() {
+  const c = getPublicContent();
+
   return (
     <footer className="gradient-hero text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -17,18 +20,27 @@ export default function Footer() {
                 <div className="text-xs text-white/70 leading-tight">Senior Secondary School</div>
               </div>
             </div>
-            <p className="text-sm text-white/70 leading-relaxed">
-              Nurturing minds, building futures. Committed to excellence in education since 1995.
+            <p className="text-sm text-white/70 leading-relaxed mb-1">
+              Nurturing minds, building futures. Committed to excellence in education since {c.established}.
             </p>
-            <div className="flex gap-3 mt-4">
-              <a href="#" className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+            <p className="text-xs text-white/50 mb-4">Affiliated: {c.affiliation}</p>
+            {/* Social Media Links */}
+            <div className="flex gap-2 mt-2 flex-wrap">
+              <a href={c.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-blue-600/60 transition-colors" title="Facebook">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+              <a href={c.twitterUrl} target="_blank" rel="noopener noreferrer" aria-label="Twitter/X"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-sky-500/60 transition-colors" title="Twitter / X">
                 <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+              <a href={c.youtubeUrl} target="_blank" rel="noopener noreferrer" aria-label="YouTube"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-red-600/60 transition-colors" title="YouTube">
                 <Youtube className="w-4 h-4" />
+              </a>
+              <a href={c.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-600/60 transition-colors" title="Instagram">
+                <Instagram className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -59,16 +71,16 @@ export default function Footer() {
             <h3 className="font-semibold text-gold mb-4">ERP Portal</h3>
             <ul className="space-y-2 text-sm text-white/70">
               {[
-                "Student Login",
-                "Teacher Login",
-                "Admin Login",
-                "Developer Login",
-                "Fee Payment",
-                "Results",
+                { label: "Student Login", href: "/login" },
+                { label: "Teacher Login", href: "/login" },
+                { label: "Admin Login", href: "/login" },
+                { label: "Developer Login", href: "/login" },
+                { label: "Fee Payment", href: "/login" },
+                { label: "Results & Report Card", href: "/login" },
               ].map((item) => (
-                <li key={item}>
-                  <Link to="/login" className="hover:text-white transition-colors">
-                    {item}
+                <li key={item.label}>
+                  <Link to={item.href} className="hover:text-white transition-colors">
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -81,23 +93,30 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gold" />
-                <span>123 School Road, Education Nagar, New Delhi - 110001</span>
+                <span>{c.footerAddress}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 shrink-0 text-gold" />
-                <span>+91 98765 43210</span>
+                <a href={`tel:${c.footerPhone.replace(/\s/g, "")}`} className="hover:text-white transition-colors">
+                  {c.footerPhone}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 shrink-0 text-gold" />
-                <span>info@brightfuture.edu.in</span>
+                <a href={`mailto:${c.footerEmail}`} className="hover:text-white transition-colors">
+                  {c.footerEmail}
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-white/50">
-          <span>© 2024 Bright Future Senior Secondary School. All rights reserved.</span>
-          <span>Designed with ❤️ for Education</span>
+          <span>© {new Date().getFullYear()} {c.schoolName}. All rights reserved.</span>
+          <span>
+            Designed with ❤️ for Education — Dev by{" "}
+            <a href="/erp/dev/profile" className="text-gold hover:underline">Dev Team</a>
+          </span>
         </div>
       </div>
     </footer>
