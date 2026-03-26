@@ -6,7 +6,7 @@ import {
   Clock, CheckCircle2, Download, Plus, X, ArrowLeft, User, History,
   Mail, Phone, MapPin, Edit3, Save
 } from "lucide-react";
-import { getSeedStudents, getSeedTeachers, addAudit } from "@/lib/erpStore";
+import { getSeedStudents, getSeedTeachers, getSeedNotices, addAudit, getAuditLog } from "@/lib/erpStore";
 
 const ME_TEACHER = getSeedTeachers()[0];
 
