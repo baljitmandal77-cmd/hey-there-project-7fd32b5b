@@ -596,7 +596,6 @@ function NoticesPage() {
 
 function AuditPage() {
   const navigate = useNavigate();
-  const { getAuditLog } = require("@/lib/erpStore");
   const logs = getAuditLog({ role: "teacher" }).slice(0, 50);
   return (
     <div className="space-y-6 animate-fade-in">
