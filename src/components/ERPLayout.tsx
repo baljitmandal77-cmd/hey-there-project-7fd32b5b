@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Calendar, CreditCard, Bell, ClipboardList,
   LogOut, Menu, X, GraduationCap, ChevronRight, User
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface NavItem {
   label: string;
@@ -20,19 +22,28 @@ interface ERPLayoutProps {
 
 export default function ERPLayout({ navItems, role, roleColor, children }: ERPLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem("erp_user");
+  useEffect(() => {
+    if (!profile) return;
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("is_read", false)
+      .then(({ count }) => setNotifCount(count || 0));
+  }, [profile, location.pathname]);
+
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
-  const user = JSON.parse(localStorage.getItem("erp_user") || '{"name":"User","role":"user"}');
-
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-20 md:hidden"
@@ -46,7 +57,6 @@ export default function ERPLayout({ navItems, role, roleColor, children }: ERPLa
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        {/* Logo */}
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-sidebar-primary rounded-full flex items-center justify-center">
@@ -61,7 +71,6 @@ export default function ERPLayout({ navItems, role, roleColor, children }: ERPLa
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <Link
@@ -81,15 +90,14 @@ export default function ERPLayout({ navItems, role, roleColor, children }: ERPLa
           ))}
         </nav>
 
-        {/* User + Logout */}
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-3 py-2 mb-1">
             <div className="w-8 h-8 bg-sidebar-accent rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-sidebar-accent-foreground" />
             </div>
             <div>
-              <div className="text-sidebar-foreground text-sm font-medium">{user.name}</div>
-              <div className="text-sidebar-foreground/50 text-xs capitalize">{user.role}</div>
+              <div className="text-sidebar-foreground text-sm font-medium">{profile?.full_name || "User"}</div>
+              <div className="text-sidebar-foreground/50 text-xs capitalize">{profile?.role || "user"}</div>
             </div>
           </div>
           <button
@@ -103,7 +111,6 @@ export default function ERPLayout({ navItems, role, roleColor, children }: ERPLa
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
         <header className="bg-card border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button
@@ -121,12 +128,15 @@ export default function ERPLayout({ navItems, role, roleColor, children }: ERPLa
           <div className="flex items-center gap-2">
             <button className="p-2 rounded-full hover:bg-accent relative">
               <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              {notifCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                  {notifCount > 9 ? "9+" : notifCount}
+                </span>
+              )}
             </button>
           </div>
         </header>
 
-        {/* Content */}
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">
           {children}
         </main>
