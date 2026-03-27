@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import ERPLayout from "@/components/ERPLayout";
+import ERPLayout from "@/components/ERPLayout"; 
 import {
   LayoutDashboard, Users, BookOpen, CreditCard, Bell,
   Calendar, FileText, Settings, UserPlus, BarChart3, Plus, X,
@@ -599,24 +599,54 @@ function UserManagementPage() {
               <tr>{["ID", "Name", "Username", "Role", "Email", "Status", "Last Login", "Actions"].map(h => <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>)}</tr>
             </thead>
             <tbody>
-              {users.map((u, i) => (
-                <tr key={u.id} className={i % 2 === 0 ? "bg-card" : "bg-muted"}>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.id}</td>
-                  <td className="px-4 py-3 font-medium text-foreground">{u.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.username}</td>
-                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${roleColor[u.role] || "bg-secondary text-foreground"}`}>{u.role}</span></td>
-                  <td className="px-4 py-3"><a href={`mailto:${u.email}`} className="text-primary hover:underline text-xs">{u.email}</a></td>
-                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${u.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{u.active ? "Active" : "Suspended"}</span></td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{u.lastLogin || "Never"}</td>
-                  <td className="px-4 py-3 flex items-center gap-1.5">
-                    <button onClick={() => setPermModal(u)} className="p-1.5 rounded bg-secondary hover:bg-accent" title="Manage Permissions"><Lock className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => toggleActive(u.id)} className={`p-1.5 rounded ${u.active ? "hover:bg-red-100 text-destructive" : "hover:bg-green-100 text-green-700"}`} title={u.active ? "Suspend" : "Activate"}>
-                      {u.active ? <X className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {users.map((u, i) => (
+    <tr key={u.id} className={i % 2 === 0 ? "bg-card" : "bg-muted"}>
+      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.id}</td>
+      <td className="px-4 py-3 font-medium text-foreground">
+        <div>{u.name}</div>
+        <div className="text-[10px] text-muted-foreground">Pass: {u.password}</div>
+      </td>
+      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">@{u.username}</td>
+      <td className="px-4 py-3">
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${roleColor[u.role] || "bg-secondary text-foreground"}`}>
+          {u.role}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span className={`text-xs font-semibold ${u.active ? "text-green-600" : "text-red-600"}`}>
+          {u.active ? "Active" : "Suspended"}
+        </span>
+      </td>
+      <td className="px-4 py-3 flex items-center gap-1.5">
+        {/* EDIT BUTTON: Isse password aur username badal jayega */}
+        <button 
+          onClick={() => { 
+            setEditingUser(u); 
+            setForm({ name: u.name, username: u.username, password: u.password, role: u.role, email: u.email || "", phone: u.phone || "" }); 
+            setShowForm(true); 
+          }} 
+          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100" title="Edit/Password"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
+
+        {/* DELETE BUTTON: Sach mein user delete ho jayega */}
+        <button 
+          onClick={() => {
+            if (u.username === 'admin' || u.username === 'dev') return alert("Main Admin ko delete nahi kar sakte!");
+            if (window.confirm(`${u.username} ko delete karein?`)) {
+              setUsers(prev => prev.filter(user => user.id !== u.id));
+              addAudit("DELETE", "User Management", `Deleted user: ${u.username}`);
+            }
+          }} 
+          className="p-1.5 rounded bg-red-50 text-red-600 hover:bg-red-100" title="Delete"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
           </table>
         </div>
       </div>
