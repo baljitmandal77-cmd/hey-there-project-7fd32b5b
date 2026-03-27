@@ -1,4 +1,4 @@
-import { useState } from "react";  
+import { useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import ERPLayout from "@/components/ERPLayout"; 
 import {
@@ -598,16 +598,17 @@ function UserManagementPage() {
             <thead className="gradient-primary text-primary-foreground">
               <tr>{["ID", "Name", "Username", "Role", "Email", "Status", "Last Login", "Actions"].map(h => <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>)}</tr>
             </thead>
-           <tbody>
+            <tbody>
   {users.map((u, i) => (
     <tr key={u.id} className={i % 2 === 0 ? "bg-card" : "bg-muted"}>
       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.id}</td>
       <td className="px-4 py-3 font-medium text-foreground">
         <div>{u.name}</div>
-        <div className="text-[10px] text-muted-foreground">@{u.username}</div>
+        <div className="text-[10px] text-muted-foreground">Pass: {u.password}</div>
       </td>
+      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">@{u.username}</td>
       <td className="px-4 py-3">
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${roleColor[u.role] || "bg-secondary"}`}>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${roleColor[u.role] || "bg-secondary text-foreground"}`}>
           {u.role}
         </span>
       </td>
@@ -617,40 +618,25 @@ function UserManagementPage() {
         </span>
       </td>
       <td className="px-4 py-3 flex items-center gap-1.5">
-        {/* 1. EDIT BUTTON (Ispe click karne par form khulega) */}
+        {/* EDIT BUTTON: Isse password aur username badal jayega */}
         <button 
           onClick={() => { 
             setEditingUser(u); 
             setForm({ name: u.name, username: u.username, password: u.password, role: u.role, email: u.email || "", phone: u.phone || "" }); 
             setShowForm(true); 
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // Form upar hota hai isliye scroll up
           }} 
-          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100" title="Edit Info/Password"
+          className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100" title="Edit/Password"
         >
           <Edit3 className="w-3.5 h-3.5" />
         </button>
 
-        {/* 2. PERMISSIONS BUTTON (Purana wala wapas aa gaya) */}
-        <button onClick={() => setPermModal(u)} className="p-1.5 rounded bg-secondary hover:bg-accent" title="Permissions">
-          <Shield className="w-3.5 h-3.5" />
-        </button>
-
-        {/* 3. SUSPEND/ACTIVATE (Toggle Status) */}
-        <button 
-          onClick={() => toggleActive(u.id)} 
-          className={`p-1.5 rounded ${u.active ? "hover:bg-orange-100 text-orange-600" : "hover:bg-green-100 text-green-600"}`} 
-          title={u.active ? "Suspend" : "Activate"}
-        >
-          {u.active ? <X className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-        </button>
-
-        {/* 4. DELETE BUTTON */}
+        {/* DELETE BUTTON: Sach mein user delete ho jayega */}
         <button 
           onClick={() => {
             if (u.username === 'admin' || u.username === 'dev') return alert("Main Admin ko delete nahi kar sakte!");
             if (window.confirm(`${u.username} ko delete karein?`)) {
               setUsers(prev => prev.filter(user => user.id !== u.id));
-              addAudit("DELETE", "User Management", `Deleted: ${u.username}`);
+              addAudit("DELETE", "User Management", `Deleted user: ${u.username}`);
             }
           }} 
           className="p-1.5 rounded bg-red-50 text-red-600 hover:bg-red-100" title="Delete"
@@ -661,6 +647,49 @@ function UserManagementPage() {
     </tr>
   ))}
 </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuditPage() {
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState("All");
+  const modules = ["All", "Students", "Teachers", "Fees", "Notice Board", "User Management", "Attendance", "Marks"];
+  const logs = getAuditLog(filter !== "All" ? { module: filter } : undefined).slice(0, 100);
+  const levelColor: Record<string, string> = { CREATE: "bg-green-100 text-green-700", UPDATE: "bg-blue-100 text-blue-700", DELETE: "bg-red-100 text-red-700", DOWNLOAD: "bg-purple-100 text-purple-700", SAVE: "bg-yellow-100 text-yellow-700", PAYMENT: "bg-emerald-100 text-emerald-700" };
+  return (
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-lg bg-secondary hover:bg-accent"><ArrowLeft className="w-4 h-4" /></button>
+        <h2 className="text-2xl font-bold text-foreground">Activity Audit Log</h2>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {modules.map(m => <button key={m} onClick={() => setFilter(m)} className={`px-3 py-1 rounded-lg text-xs font-medium ${filter === m ? "gradient-primary text-primary-foreground" : "bg-secondary text-foreground hover:bg-accent"}`}>{m}</button>)}
+      </div>
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        {logs.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No audit entries yet. ERP actions will be logged here with timestamps.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="gradient-primary text-primary-foreground">
+                <tr>{["Timestamp", "User", "Role", "Module", "Action", "Details"].map(h => <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {logs.map((log, i) => (
+                  <tr key={log.id} className={i % 2 === 0 ? "bg-card" : "bg-muted"}>
+                    <td className="px-4 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">{new Date(log.timestamp).toLocaleString("en-IN")}</td>
+                    <td className="px-4 py-3 font-medium text-foreground text-xs">{log.userName}</td>
+                    <td className="px-4 py-3"><span className="text-xs capitalize bg-secondary px-2 py-0.5 rounded">{log.userRole}</span></td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{log.module}</td>
+                    <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded ${levelColor[log.action] || "bg-secondary text-foreground"}`}>{log.action}</span></td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">{log.details}</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         )}
