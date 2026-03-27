@@ -1,44 +1,52 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Eye, EyeOff, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
-const DEMO_USERS = [
-  { id: "student", label: "Student", username: "student", password: "student123", color: "bg-blue-500", route: "/erp/student" },
-  { id: "teacher", label: "Teacher", username: "teacher", password: "teacher123", color: "bg-green-500", route: "/erp/teacher" },
-  { id: "admin", label: "Admin", username: "admin", password: "admin123", color: "bg-orange-500", route: "/erp/admin" },
-  { id: "dev", label: "Developer", username: "dev", password: "dev123", color: "bg-purple-500", route: "/erp/dev" },
-];
+const ROLE_ROUTES: Record<string, string> = {
+  student: "/erp/student",
+  teacher: "/erp/teacher",
+  admin: "/erp/admin",
+  accountant: "/erp/admin",
+  dev: "/erp/dev",
+};
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setTimeout(() => {
-      const user = DEMO_USERS.find(
-        u => u.username === username.toLowerCase() && u.password === password
-      );
-      if (user) {
-        localStorage.setItem("erp_user", JSON.stringify({ role: user.id, name: user.label }));
-        navigate(user.route);
-      } else {
-        setError("Invalid username or password.");
-      }
-      setLoading(false);
-    }, 700);
-  };
 
-  const fillDemo = (user: typeof DEMO_USERS[0]) => {
-    setUsername(user.username);
-    setPassword(user.password);
-    setError("");
+    const { error } = await signIn(email, password);
+    if (error) {
+      setError(error);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch profile to get role for routing
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      
+      const role = profile?.role || "student";
+      const route = ROLE_ROUTES[role] || "/erp/student";
+      navigate(route);
+    }
+    setLoading(false);
   };
 
   return (
@@ -58,14 +66,14 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Username</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
               <input
-                type="text"
+                type="email"
                 required
-                value={username}
-                onChange={e => setUsername(e.target.value)}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 className="w-full border border-input bg-background rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="Enter username"
+                placeholder="Enter your email"
               />
             </div>
             <div>
@@ -109,25 +117,9 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-6 border-t border-border pt-5">
-            <p className="text-xs text-muted-foreground text-center mb-3">Demo Credentials (click to fill)</p>
-            <div className="grid grid-cols-2 gap-2">
-              {DEMO_USERS.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => fillDemo(user)}
-                  className="flex items-center gap-2 bg-muted hover:bg-accent border border-border rounded-lg px-3 py-2 text-xs transition-colors"
-                >
-                  <div className={`w-2 h-2 rounded-full ${user.color}`} />
-                  <div className="text-left">
-                    <div className="font-medium text-foreground">{user.label}</div>
-                    <div className="text-muted-foreground">{user.username} / {user.password}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            Contact your administrator for login credentials.
+          </p>
         </div>
 
         <p className="text-center text-white/40 text-xs mt-4">
